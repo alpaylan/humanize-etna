@@ -1,0 +1,25 @@
+diff --git a/src/humanize/number.py b/src/humanize/number.py
+index 77b79ab..e2dccb9 100644
+--- a/src/humanize/number.py
++++ b/src/humanize/number.py
+@@ -302,10 +302,9 @@ def apnumber(value: NumberOrString) -> str:
+         value = int(value)
+     except (TypeError, ValueError):
+         return str(value)
+-    if not 0 <= value < 10:
++    if not 0 < value < 10:
+         return str(value)
+     return (
+-        _("zero"),
+         _("one"),
+         _("two"),
+         _("three"),
+@@ -315,7 +314,7 @@ def apnumber(value: NumberOrString) -> str:
+         _("seven"),
+         _("eight"),
+         _("nine"),
+-    )[value]
++    )[value - 1]
+ 
+ 
+ def fractional(value: NumberOrString) -> str:

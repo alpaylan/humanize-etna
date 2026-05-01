@@ -1,0 +1,13 @@
+diff --git a/src/humanize/number.py b/src/humanize/number.py
+index 77b79ab..6b5b6ce 100644
+--- a/src/humanize/number.py
++++ b/src/humanize/number.py
+@@ -567,7 +567,7 @@ def metric(value: float, unit: str = "", precision: int = 3) -> str:
+ 
+     if not math.isfinite(value):
+         return _format_not_finite(value)
+-    exponent = int(math.floor(math.log10(abs(value)))) if value != 0 else 0
++    exponent = int(math.floor(math.log10(abs(value))))
+ 
+     if exponent >= 33 or exponent < -30:
+         return scientific(value, precision - 1) + unit

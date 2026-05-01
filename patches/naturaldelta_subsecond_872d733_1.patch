@@ -1,0 +1,14 @@
+diff --git a/src/humanize/time.py b/src/humanize/time.py
+index 9d43d00..9a19151 100644
+--- a/src/humanize/time.py
++++ b/src/humanize/time.py
+@@ -146,8 +146,7 @@ def naturaldelta(
+         delta = value
+     else:
+         try:
+-            int(value)  # Explicitly don't support string such as "NaN" or "inf"
+-            value = float(value)
++            value = int(value)
+             delta = dt.timedelta(seconds=value)
+         except (ValueError, TypeError):
+             return str(value)

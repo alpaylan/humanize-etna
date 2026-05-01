@@ -1,0 +1,13 @@
+diff --git a/src/humanize/number.py b/src/humanize/number.py
+index 77b79ab..d8b7640 100644
+--- a/src/humanize/number.py
++++ b/src/humanize/number.py
+@@ -161,7 +161,7 @@ def intcomma(value: NumberOrString, ndigits: int | None = None) -> str:
+     except (TypeError, ValueError):
+         return str(value)
+ 
+-    if ndigits is not None:
++    if ndigits:
+         orig = "{0:.{1}f}".format(value, ndigits)
+     else:
+         orig = str(value)

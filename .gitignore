@@ -157,3 +157,20 @@ cython_debug/
 
 # hatch-vcs
 src/*/_version.py
+
+# etna workload artefacts (overlaid by the etna-ify pipeline)
+progress.jsonl
+etna.log
+.hegel/
+etna/.venv/
+etna/.pytest_cache/
+_make_patches.py
+_gen_patch.py
+/.hegel
+/etna.log
+/progress.jsonl
+/.marauders
+/uv.lock
+/etna/.venv
+/etna/etna.log
+/etna/.hypothesis

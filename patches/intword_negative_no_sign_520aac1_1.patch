@@ -1,0 +1,17 @@
+diff --git a/src/humanize/number.py b/src/humanize/number.py
+index 77b79ab..a97152f 100644
+--- a/src/humanize/number.py
++++ b/src/humanize/number.py
+@@ -236,11 +236,7 @@ def intword(value: NumberOrString, format: str = "%.1f") -> str:
+     except (TypeError, ValueError):
+         return str(value)
+ 
+-    if value < 0:
+-        value *= -1
+-        negative_prefix = "-"
+-    else:
+-        negative_prefix = ""
++    negative_prefix = ""
+ 
+     if value < powers[0]:
+         return f"{negative_prefix}{value}"

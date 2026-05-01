@@ -1,0 +1,215 @@
+name = "humanize"
+description = "Pure-Python human-readable conversions for numbers, file sizes and dates (python-humanize/humanize). Bug fixes mined from upstream history; modern HEAD is the base, each patch reverse-applies a fix to install the original bug."
+language = "python"
+crate = "humanize"
+base_commit = "877e1fda9829073fe086625915d1197cd07412ad"
+
+# ---------------------------------------------------------------------------
+# Variant: metric_zero_crash_b1ee687_1
+# ---------------------------------------------------------------------------
+[[tasks]]
+mutations = ["metric_zero_crash_b1ee687_1"]
+
+[tasks.source]
+repo = "https://github.com/python-humanize/humanize"
+commits = ["b1ee6875820839a59f1b6f4a5fedc7cad8883834"]
+commit_subjects = ["Fix metric(0) crash."]
+origin = "internal"
+summary = "metric() used to call math.log10(abs(value)) directly, raising ValueError('math domain error') when value was 0. The fix short-circuits to exponent=0 in that branch."
+
+[tasks.injection]
+kind = "patch"
+files = ["src/humanize/number.py"]
+locations = [{ file = "src/humanize/number.py", line = 570, symbol = "metric" }]
+patch = "patches/metric_zero_crash_b1ee687_1.patch"
+
+[tasks.bug]
+short_name = "metric_zero_crash"
+invariant = "metric(value) returns a string for every finite value, including 0; it must not raise ValueError('math domain error')."
+how_triggered = "Reverse-applying the patch removes the `if value != 0 else 0` guard; metric(0) then evaluates math.log10(0) and raises ValueError."
+
+[[tasks.tasks]]
+property = "MetricFiniteOnZero"
+witnesses = [
+  { test_fn = "witness_metric_finite_on_zero_case_zero", note = "metric(0) must not raise" },
+]
+
+# ---------------------------------------------------------------------------
+# Variant: intword_negative_no_sign_520aac1_1
+# ---------------------------------------------------------------------------
+[[tasks]]
+mutations = ["intword_negative_no_sign_520aac1_1"]
+
+[tasks.source]
+repo = "https://github.com/python-humanize/humanize"
+commits = ["520aac16c448f3cfd72f7c5812b04a3238e77bb4"]
+commit_subjects = ["Fix intword for negative numbers"]
+origin = "internal"
+summary = "intword() used to ignore the sign on negative inputs above the thousand threshold; e.g. intword(-1_000_000) produced '1.0 million'. The fix records the sign before chopping and prepends a minus to the result."
+
+[tasks.injection]
+kind = "patch"
+files = ["src/humanize/number.py"]
+locations = [{ file = "src/humanize/number.py", line = 239, symbol = "intword" }]
+patch = "patches/intword_negative_no_sign_520aac1_1.patch"
+
+[tasks.bug]
+short_name = "intword_negative_no_sign"
+invariant = "For any int value with value < 0 large enough to be humanized, intword(value) starts with '-'."
+how_triggered = "Reverse-applying the patch deletes the `if value < 0` block, so the negative_prefix is always '' and intword(-1_000_000) returns '1.0 million' instead of '-1.0 million'."
+
+[[tasks.tasks]]
+property = "IntwordPreservesSign"
+witnesses = [
+  { test_fn = "witness_intword_preserves_sign_case_minus_million", note = "intword(-1_000_000) must start with '-'" },
+]
+
+# ---------------------------------------------------------------------------
+# Variant: intcomma_ndigits_zero_03863fe_1
+# ---------------------------------------------------------------------------
+[[tasks]]
+mutations = ["intcomma_ndigits_zero_03863fe_1"]
+
+[tasks.source]
+repo = "https://github.com/python-humanize/humanize"
+commits = ["03863fed6c2ba02cfd13d5b1e0b161f680c7b966"]
+commit_subjects = ["Fix intcomma with ndigits=0"]
+origin = "internal"
+summary = "intcomma(value, ndigits=0) used to skip the rounding branch (`if ndigits:` treats 0 as falsy) and emit the raw float repr. The fix uses `if ndigits is not None` so ndigits=0 rounds to integer."
+
+[tasks.injection]
+kind = "patch"
+files = ["src/humanize/number.py"]
+locations = [{ file = "src/humanize/number.py", line = 164, symbol = "intcomma" }]
+patch = "patches/intcomma_ndigits_zero_03863fe_1.patch"
+
+[tasks.bug]
+short_name = "intcomma_ndigits_zero"
+invariant = "intcomma(value, 0) on a finite numeric value returns a string with no decimal separator: ndigits=0 means round-to-integer."
+how_triggered = "Reverse-applying the patch flips `if ndigits is not None:` back to `if ndigits:`, so 0 is treated as 'unspecified' and intcomma(1234.5454545, 0) returns '1,234.5454545' instead of '1,235'."
+
+[[tasks.tasks]]
+property = "IntcommaNdigitsZeroRounds"
+witnesses = [
+  { test_fn = "witness_intcomma_ndigits_zero_rounds_case_thousand_decimal", note = "intcomma(1234.5454545, 0) must round to '1,235'" },
+]
+
+# ---------------------------------------------------------------------------
+# Variant: apnumber_zero_off_by_one_2f179b6_1
+# ---------------------------------------------------------------------------
+[[tasks]]
+mutations = ["apnumber_zero_off_by_one_2f179b6_1"]
+
+[tasks.source]
+repo = "https://github.com/python-humanize/humanize"
+commits = ["2f179b6b5c1e2eb88240e3ec42ff9edeb946ea65"]
+commit_subjects = ["Fix: AP style for 0 is 'zero'"]
+origin = "internal"
+summary = "apnumber() used to test `0 < value < 10`, treating 0 as out-of-range. The AP style guide spells 0 as 'zero', so the fix widens the range to `0 <= value < 10` and prepends 'zero' to the word tuple."
+
+[tasks.injection]
+kind = "patch"
+files = ["src/humanize/number.py"]
+locations = [{ file = "src/humanize/number.py", line = 305, symbol = "apnumber" }]
+patch = "patches/apnumber_zero_off_by_one_2f179b6_1.patch"
+
+[tasks.bug]
+short_name = "apnumber_zero_off_by_one"
+invariant = "apnumber(0) == 'zero'; for 1..9 it spells the digit; otherwise it returns str(value)."
+how_triggered = "Reverse-applying the patch tightens the guard back to `0 < value < 10` and removes 'zero' from the tuple. apnumber(0) then falls through to `return str(value)` and yields '0'."
+
+[[tasks.tasks]]
+property = "ApnumberZeroIsZero"
+witnesses = [
+  { test_fn = "witness_apnumber_zero_is_zero_case_zero", note = "apnumber(0) must be 'zero'" },
+]
+
+# ---------------------------------------------------------------------------
+# Variant: naturalsize_float_int_cast_11e62ee_1
+# ---------------------------------------------------------------------------
+[[tasks]]
+mutations = ["naturalsize_float_int_cast_11e62ee_1"]
+
+[tasks.source]
+repo = "https://github.com/python-humanize/humanize"
+commits = ["11e62eeedb8990298c3612af82376dc2344d24f8"]
+commit_subjects = ["Fix regression in naturalsize for float"]
+origin = "internal"
+summary = "naturalsize(value) on a sub-base float (e.g. 500.0) used to render as '500.0 Bytes' because the sub-base branch interpolated the raw float. The fix casts to int(bytes_) so the integer suffix matches integer inputs."
+
+[tasks.injection]
+kind = "patch"
+files = ["src/humanize/filesize.py"]
+locations = [{ file = "src/humanize/filesize.py", line = 97, symbol = "naturalsize" }]
+patch = "patches/naturalsize_float_int_cast_11e62ee_1.patch"
+
+[tasks.bug]
+short_name = "naturalsize_float_int_cast"
+invariant = "naturalsize(v) on a finite float v with 1 < |v| < base and v == int(v) does not contain a decimal separator."
+how_triggered = "Reverse-applying the patch drops the `int(bytes_)` cast in the sub-base branch and naturalsize(500.0) returns '500.0 Bytes' instead of '500 Bytes'."
+
+[[tasks.tasks]]
+property = "NaturalsizeIntForSmallFloats"
+witnesses = [
+  { test_fn = "witness_naturalsize_int_for_small_floats_case_500_float", note = "naturalsize(500.0) must equal '500 Bytes'" },
+]
+
+# ---------------------------------------------------------------------------
+# Variant: naturaldelta_negative_components_b939b2e_1
+# ---------------------------------------------------------------------------
+[[tasks]]
+mutations = ["naturaldelta_negative_components_b939b2e_1"]
+
+[tasks.source]
+repo = "https://github.com/python-humanize/humanize"
+commits = ["b939b2e50ca7449f89b69d29a057886942e27b36"]
+commit_subjects = ["Call abs on the whole datetime, not just parts"]
+origin = "internal"
+summary = "naturaldelta() used to call abs() on delta.days and delta.seconds independently. Python normalizes a negative timedelta to days=-1, seconds=86400-X — so the per-component absolute value yields '1 day' for what should be '5 hours'. The fix takes abs(delta) of the whole timedelta first."
+
+[tasks.injection]
+kind = "patch"
+files = ["src/humanize/time.py"]
+locations = [{ file = "src/humanize/time.py", line = 157, symbol = "naturaldelta" }]
+patch = "patches/naturaldelta_negative_components_b939b2e_1.patch"
+
+[tasks.bug]
+short_name = "naturaldelta_negative_components"
+invariant = "naturaldelta(td) == naturaldelta(-td) for any non-zero timedelta td."
+how_triggered = "Reverse-applying the patch swaps `delta = abs(delta)` for component-wise abs(delta.days), abs(delta.seconds). `naturaldelta(timedelta(hours=-5))` then returns '1 day, 19 hours' (or similar) rather than '5 hours'."
+
+[[tasks.tasks]]
+property = "NaturaldeltaNegativeIsAbsolute"
+witnesses = [
+  { test_fn = "witness_naturaldelta_negative_is_absolute_case_five_hours", note = "naturaldelta(-5h) must equal naturaldelta(+5h)" },
+]
+
+# ---------------------------------------------------------------------------
+# Variant: naturaldelta_subsecond_872d733_1
+# ---------------------------------------------------------------------------
+[[tasks]]
+mutations = ["naturaldelta_subsecond_872d733_1"]
+
+[tasks.source]
+repo = "https://github.com/python-humanize/humanize"
+commits = ["872d7331fe3e307d3cc682d422f51f2de13c0fa7"]
+commit_subjects = ["Use float to support sub-second precision"]
+origin = "internal"
+summary = "naturaldelta(value) used to cast value to int before constructing the timedelta. Sub-second floats (e.g. 0.5) became 0, so naturaldelta(0.5, minimum_unit='milliseconds') returned 'a moment'. The fix casts to float so the timedelta keeps the microsecond component."
+
+[tasks.injection]
+kind = "patch"
+files = ["src/humanize/time.py"]
+locations = [{ file = "src/humanize/time.py", line = 150, symbol = "naturaldelta" }]
+patch = "patches/naturaldelta_subsecond_872d733_1.patch"
+
+[tasks.bug]
+short_name = "naturaldelta_subsecond"
+invariant = "For 0.001 <= seconds < 1, naturaldelta(seconds, minimum_unit='milliseconds') contains 'millisecond' (not 'a moment')."
+how_triggered = "Reverse-applying the patch flips `value = float(value)` back to `value = int(value)`. naturaldelta(0.5, minimum_unit='milliseconds') then returns 'a moment' because the sub-second component is truncated to 0."
+
+[[tasks.tasks]]
+property = "NaturaldeltaSubsecondsAreMilliseconds"
+witnesses = [
+  { test_fn = "witness_naturaldelta_subseconds_are_milliseconds_case_half_second", note = "naturaldelta(0.5, ms) must contain 'millisecond'" },
+]
