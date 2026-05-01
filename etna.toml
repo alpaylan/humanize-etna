@@ -1,6 +1,7 @@
 name = "humanize"
 description = "Pure-Python human-readable conversions for numbers, file sizes and dates (python-humanize/humanize). Bug fixes mined from upstream history; modern HEAD is the base, each patch reverse-applies a fix to install the original bug."
 language = "python"
+strategies = ["hypothesis", "crosshair"]
 crate = "humanize"
 base_commit = "877e1fda9829073fe086625915d1197cd07412ad"
 
